@@ -59,6 +59,16 @@ type SnackBarOptions = {
    * Action button configuration options.
    */
   action?: Action,
+
+  /**
+   * [Android] margins applied for snackbar
+   */
+  margins?: {
+    top: number,
+    left: number,
+    right: number,
+    bottom: number
+  }
 };
 
 /**
@@ -91,6 +101,11 @@ type ISnackBar = {
   dismiss: () => void,
 };
 
+const floorNumber = (num?: number) => {
+  if (!num) return 0
+  return Math.floor(num)
+}
+
 const SnackBar: ISnackBar = {
   LENGTH_LONG: NativeModules.RNSnackbar.LENGTH_LONG,
   LENGTH_SHORT: NativeModules.RNSnackbar.LENGTH_SHORT,
@@ -110,6 +125,13 @@ const SnackBar: ISnackBar = {
     const backgroundColor = options.backgroundColor && processColor(options.backgroundColor);
 
     const action = options.action || {};
+    const marginsOption = options.margins || {}
+    const margins = {
+      left: floorNumber(marginsOption.left),
+      top: floorNumber(marginsOption.top),
+      right: floorNumber(marginsOption.right),
+      bottom: floorNumber(marginsOption.bottom)
+    }
 
     warnDeprecation(action, 'title', 'text');
     warnDeprecation(action, 'color', 'textColor');
@@ -131,6 +153,7 @@ const SnackBar: ISnackBar = {
         text: actionText,
         textColor: actionTextColor,
       } : undefined,
+      margins
     };
 
     NativeModules.RNSnackbar.show(nativeOptions, onPressCallback);

@@ -47,6 +47,24 @@ public class SnackbarModule extends ReactContextBaseJavaModule {
         return constants;
     }
 
+    private boolean addMargins(Object snackBar, int left, int top, int right, int bottom) {
+        try {
+            Class snackbarClass = Class.forName("com.google.android.material.snackbar.Snackbar");
+            Field originalMarginsField = snackbarClass.getSuperclass().getDeclaredField("originalMargins");
+            originalMarginsField.setAccessible(true);
+            Rect fixedOriginalMargins = new Rect();
+            fixedOriginalMargins.left = left; 
+            fixedOriginalMargins.top = top;
+            fixedOriginalMargins.right = right;
+            fixedOriginalMargins.bottom = bottom;
+            originalMarginsField.set(snackBar, fixedOriginalMargins);
+            return true;
+        } catch (IllegalAccessException | NoSuchFieldException | ClassNotFoundException e) {
+            LogUtils.d(TAG, "fixSnackBarMarginBottomBug error.");
+        }
+        return false;
+    }
+
     @ReactMethod
     public void show(ReadableMap options, final Callback callback) {
         ViewGroup view;
@@ -100,6 +118,13 @@ public class SnackbarModule extends ReactContextBaseJavaModule {
     }
 
     private void displaySnackbar(View view, ReadableMap options, final Callback callback) {
+        // MARGINS
+        ReadableMap margins = options.getMap("margins");
+        int left = getOptionValue(margins, "left", 0);
+        int right = getOptionValue(margins, "right", 0);
+        int bottom = getOptionValue(margins, "bottom", 0);
+        int top = getOptionValue(margins, "top", 0);
+
         String text = getOptionValue(options, "text", "");
         int duration = getOptionValue(options, "duration", Snackbar.LENGTH_SHORT);
         int textColor = getOptionValue(options, "textColor", Color.WHITE);
@@ -136,6 +161,8 @@ public class SnackbarModule extends ReactContextBaseJavaModule {
         if (font != null) {
             snackbarText.setTypeface(font);
         }
+
+        addMargins(snackbar, left, top, right, bottom);
 
         mActiveSnackbars.add(snackbar);
 
